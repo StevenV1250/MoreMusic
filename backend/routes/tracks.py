@@ -116,10 +116,11 @@ def get_all_time_top_tracks_recommendations():
                     recommendations.append({"song_name": song_name, "artists": artists})
                     track_ids.append(id)
                     
-        spotify_uris = [f'spotify:track:{track_ids}' for track_id in track_ids]
+        spotify_uris = [f'spotify:track:{track_id}' for track_id in track_ids]
         session['uris'] = spotify_uris
 
-        return jsonify(recommendations)
+
+        return jsonify(recommendations, session['uris'])
     else:
         return jsonify({"message": "No tracks found"})
 

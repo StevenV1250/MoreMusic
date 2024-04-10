@@ -60,10 +60,10 @@ def create_rec_playlist():
             'Content-Type': 'application/json'
       }
       body = {
-            "name": "did it work?",
+            "name": "IT WORKS?!",
             "public": False,
             "collaborative": False,
-            "description": "Testing endpoint and route"
+            "description": "pls work"
       }
 
       response = requests.post(create_rec_playlist_url, headers=headers, json=body) 
