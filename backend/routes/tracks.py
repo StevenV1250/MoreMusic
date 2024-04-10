@@ -50,13 +50,18 @@ def get_recent_top_tracks():
       response = requests.get(recent_top_tracks_url, headers=headers)
       recent_top_tracks_data = response.json()
 
-      # return jsonify(top_tracks_data)
-
       if 'items' in recent_top_tracks_data:
-            tracks = [track['name'] for track in recent_top_tracks_data['items']]
-            return jsonify(tracks)
+        tracks_with_artists = []
+        track_ids =[]
+        for item in recent_top_tracks_data['items']:
+            track_name = item['name']
+            artists = [artist['name'] for artist in item['artists']]
+            track_id = item['id']
+            tracks_with_artists.append({"track_name": track_name, "artists": artists})
+            track_ids.append(track_id)
+        return jsonify(tracks_with_artists, track_ids)
       else:
-            return jsonify({"message": "No tracks found"})
+        return jsonify({"message": "No tracks found"})
 
 @tracks_bp.route("/get-song")
 def get_song():
@@ -140,4 +145,45 @@ def get_all_time_top_tracks_recommendations():
 #     response = requests.get(rec_url, headers=headers)
 #     return  jsonify(response.text)
     
-    
+@tracks_bp.route('/recent-top-tracks-recommendations')
+def get_recent_top_tracks_recommendations():
+    if 'access_token' not in session:
+        return redirect('/login')
+
+    if datetime.now().timestamp() > session['expires_at']:
+        return redirect('/refresh-token')
+
+    recent_top_tracks_url = 'https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=1'
+    headers = {
+        "Authorization": f"Bearer {session['access_token']}"
+    }
+
+    response = requests.get(recent_top_tracks_url, headers=headers)
+    recent_top_tracks_data = response.json()
+
+    if 'items' in recent_top_tracks_data:
+        tracks = [track['id'] for track in recent_top_tracks_data['items']]  # Extract track IDs
+        recommendations = []
+        track_ids = []
+        
+        for track_id in tracks:
+            recommendations_url = f'https://api.spotify.com/v1/recommendations?seed_tracks={track_id}&limit=1'
+            recommendations_response = requests.get(recommendations_url, headers=headers)
+            recommendations_data = recommendations_response.json()
+            
+            if 'tracks' in recommendations_data:
+                # Extract song names and artists from recommendations
+                for track in recommendations_data['tracks']:
+                    song_name = track['name']
+                    artists = ', '.join(artist['name'] for artist in track['artists'])
+                    id = track['id']
+                    recommendations.append({"song_name": song_name, "artists": artists})
+                    track_ids.append(id)
+                    
+        spotify_recent_uris = [f'spotify:track:{track_id}' for track_id in track_ids]
+        session['recent_uris'] = spotify_recent_uris
+
+
+        return jsonify(recommendations, session['recent_uris'])
+    else:
+        return jsonify({"message": "No tracks found"})
