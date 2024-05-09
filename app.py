@@ -106,7 +106,7 @@ def login():
             'client_id': CLIENT_ID,
             'response_type': 'code',
             'scope': scope,
-            'redirect_uri': "more-music-rust.vercel.app",
+            'redirect_uri': REDIRECT_URI,
             'show_dialog': True
       }
 
