@@ -26,7 +26,7 @@ app.secret_key = '53d355f8-571a-4590-a310-1f9579440851'
 
 CLIENT_ID = '8496cd00eb66495c84325ea43c868291'
 CLIENT_SECRET = 'd7d7baa47f754b1296b0adf0cb16322a'
-REDIRECT_URI = "http://localhost:5000/callback"
+REDIRECT_URI = "more-music-9oq4.vercel.app"
 
 AUTH_URL = "https://accounts.spotify.com/authorize"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
