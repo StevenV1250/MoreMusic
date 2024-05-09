@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 80px auto 20px; /* Adjusted margin to accommodate fixed navbar */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            color: #6e1c84;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            color: #555;
+        }
+
+        td {
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('user.get_user') }}">My Profile</a>
+        <a href="{{ url_for('tracks.get_all_time_top_tracks') }}">View Songs</a>
+        <a href="{{ url_for('artists.get_all_time_top_artists') }}">View Artists</a>
+        <a href="{{ url_for('track_recs.track_recommendations') }}">Get Recommendations</a>
+    </div>
+    <div class="container">
+        <h1>User Information</h1>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td><strong>User ID</strong></td>
+                <td>{{ user_id }}</td>
+            </tr>
+            <tr>
+                <td><strong>Email</strong></td>
+                <td>{{ email }}</td>
+            </tr>
+            <tr>
+                <td><strong>Membership Type</strong></td>
+                <td>{{ membership }}</td>
+            </tr>
+            <tr>
+                  <td><strong>Country</strong></td>
+                  <td>{{ country }}</td>
+              </tr>
+        </table>
+    </div>
+</body>
+</html>

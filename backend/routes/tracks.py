@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, redirect, session
+from flask import Blueprint, jsonify, redirect, session, render_template
 from datetime import datetime
 import requests
 
@@ -27,9 +27,11 @@ def get_all_time_top_tracks():
             track_name = item['name']
             artists = [artist['name'] for artist in item['artists']]
             track_id = item['id']
-            tracks_with_artists.append({"track_name": track_name, "artists": artists})
+            image_url = item['album']['images'][0]['url']
+            tracks_with_artists.append({"track_name": track_name, "artists": artists, 'image_url':image_url})
             track_ids.append(track_id)
-        return jsonify(tracks_with_artists, track_ids)
+            data = jsonify(tracks_with_artists, track_ids)
+        return render_template('top_tracks.html', data=tracks_with_artists)
     else:
         return jsonify({"message": "No tracks found"})
 
@@ -57,9 +59,11 @@ def get_mid_top_tracks():
             track_name = item['name']
             artists = [artist['name'] for artist in item['artists']]
             track_id = item['id']
-            tracks_with_artists.append({"track_name": track_name, "artists": artists})
+            image_url = item['album']['images'][0]['url']
+            tracks_with_artists.append({"track_name": track_name, "artists": artists, "image_url": image_url})
             track_ids.append(track_id)
-        return jsonify(tracks_with_artists, track_ids)
+            data = jsonify(tracks_with_artists, track_ids)
+        return render_template('mid_tracks.html', data=tracks_with_artists)
       else:
         return jsonify({"message": "No tracks found"})
 
@@ -86,9 +90,11 @@ def get_recent_top_tracks():
             track_name = item['name']
             artists = [artist['name'] for artist in item['artists']]
             track_id = item['id']
-            tracks_with_artists.append({"track_name": track_name, "artists": artists})
+            image_url = item['album']['images'][0]['url']
+            tracks_with_artists.append({"track_name": track_name, "artists": artists, "image_url": image_url})
             track_ids.append(track_id)
-        return jsonify(tracks_with_artists, track_ids)
+            data = jsonify(tracks_with_artists, track_ids)
+        return render_template('recent_tracks.html', data=tracks_with_artists)
       else:
         return jsonify({"message": "No tracks found"})
 
@@ -125,6 +131,7 @@ def get_all_time_top_tracks_recommendations():
         tracks = [track['id'] for track in all_time_top_tracks_data['items']]  # Extract track IDs
         recommendations = []
         track_ids = []
+        artists = []
         
         for track_id in tracks:
             recommendations_url = f'https://api.spotify.com/v1/recommendations?seed_tracks={track_id}&limit=1'
@@ -144,17 +151,18 @@ def get_all_time_top_tracks_recommendations():
             if 'tracks' in recommendations_data:
                 # Extract song names and artists from recommendations
                 for track in recommendations_data['tracks']:
-                    song_name = track['name']
-                    artists = ', '.join(artist['name'] for artist in track['artists'])
+                    track_name = track['name']
+                    artists = (artist['name'] for artist in track['artists'])
                     id = track['id']
-                    recommendations.append({"song_name": song_name, "artists": artists})
+                    image_url = track['album']['images'][0]['url']  # Get the first image URL
+                    recommendations.append({"track_name": track_name, "artists": artists, "image_url": image_url})
                     track_ids.append(id)
                     
         spotify_uris = [f'spotify:track:{track_id}' for track_id in track_ids]
         session['uris'] = spotify_uris
 
 
-        return jsonify(recommendations, session['uris'])
+        return render_template('top_tracks_recs.html', data=recommendations)
     else:
         return jsonify({"message": "No tracks found"})
 
@@ -203,16 +211,62 @@ def get_recent_top_tracks_recommendations():
             if 'tracks' in recommendations_data:
                 # Extract song names and artists from recommendations
                 for track in recommendations_data['tracks']:
-                    song_name = track['name']
-                    artists = ', '.join(artist['name'] for artist in track['artists'])
+                    track_name = track['name']
+                    artists = (artist['name'] for artist in track['artists'])
                     id = track['id']
-                    recommendations.append({"song_name": song_name, "artists": artists})
+                    image_url = track['album']['images'][0]['url']  # Get the first image URL
+                    recommendations.append({"track_name": track_name, "artists": artists, 'image_url': image_url})
                     track_ids.append(id)
                     
         spotify_recent_uris = [f'spotify:track:{track_id}' for track_id in track_ids]
         session['recent_uris'] = spotify_recent_uris
 
 
-        return jsonify(recommendations, session['recent_uris'])
+        return render_template('recent_tracks_recs.html', data=recommendations)
+    else:
+        return jsonify({"message": "No tracks found"})
+    
+
+@tracks_bp.route('/mid-top-tracks-recommendations')
+def get_mid_top_tracks_recommendations():
+    if 'access_token' not in session:
+        return redirect('/login')
+
+    if datetime.now().timestamp() > session['expires_at']:
+        return redirect('/refresh-token')
+
+    recent_top_tracks_url = 'https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10&offset=1'
+    headers = {
+        "Authorization": f"Bearer {session['access_token']}"
+    }
+
+    response = requests.get(recent_top_tracks_url, headers=headers)
+    recent_top_tracks_data = response.json()
+
+    if 'items' in recent_top_tracks_data:
+        tracks = [track['id'] for track in recent_top_tracks_data['items']]  # Extract track IDs
+        recommendations = []
+        track_ids = []
+        
+        for track_id in tracks:
+            recommendations_url = f'https://api.spotify.com/v1/recommendations?seed_tracks={track_id}&limit=1'
+            recommendations_response = requests.get(recommendations_url, headers=headers)
+            recommendations_data = recommendations_response.json()
+            
+            if 'tracks' in recommendations_data:
+                # Extract song names and artists from recommendations
+                for track in recommendations_data['tracks']:
+                    track_name = track['name']
+                    artists = (artist['name'] for artist in track['artists'])
+                    id = track['id']
+                    image_url = track['album']['images'][0]['url']  # Get the first image URL
+                    recommendations.append({"track_name": track_name, "artists": artists, 'image_url': image_url})
+                    track_ids.append(id)
+                    
+        spotify_recent_uris = [f'spotify:track:{track_id}' for track_id in track_ids]
+        session['mid_uris'] = spotify_recent_uris
+
+
+        return render_template('mid_tracks_recs.html', data=recommendations)
     else:
         return jsonify({"message": "No tracks found"})
